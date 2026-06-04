@@ -31,7 +31,17 @@ type UploadResult = {
   items?: SateiItem[]
 }
 
-type InputMode = 'file' | 'text'
+type HistoryRecord = {
+  id: number
+  filename: string
+  content_type: string | null
+  size_bytes: number
+  status: string
+  summary: string | null
+  created_at: string
+}
+
+type InputMode = 'file' | 'text' | 'history'
 
 function App() {
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -44,6 +54,8 @@ function App() {
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<UploadResult | null>(null)
   const [items, setItems] = useState<SateiItem[]>([])
+  const [historyRecords, setHistoryRecords] = useState<HistoryRecord[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
   const updateResult = (payload: UploadResult | null) => {
     setResult(payload)
@@ -61,6 +73,73 @@ function App() {
       .then(() => setApiStatus('ok'))
       .catch(() => setApiStatus('down'))
   }, [])
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true)
+    try {
+      const response = await fetch('/upload-records')
+      if (!response.ok) {
+        throw new Error('履歴の取得に失敗しました')
+      }
+      const data = await response.json()
+      setHistoryRecords(data)
+    } catch (error) {
+      console.error(error)
+      setMessage(error instanceof Error ? error.message : '履歴の取得に失敗しました')
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
+  const selectHistoryRecord = async (record: HistoryRecord) => {
+    setMessage('')
+    try {
+      const response = await fetch(`/upload-records/${record.id}/items`)
+      if (!response.ok) {
+        throw new Error('明細の取得に失敗しました')
+      }
+      const itemsData: SateiItem[] = await response.json()
+
+      // 集計値の再計算
+      const total = itemsData.reduce((acc, cur) => acc + (cur.price ?? 0), 0)
+      const priced = itemsData.filter((it) => it.price !== null && it.price !== undefined).length
+      
+      const categories: Record<string, number> = {}
+      const makers: Record<string, number> = {}
+      itemsData.forEach((it) => {
+        if (it.category) {
+          categories[it.category] = (categories[it.category] || 0) + 1
+        }
+        if (it.maker) {
+          makers[it.maker] = (makers[it.maker] || 0) + 1
+        }
+      })
+
+      const payload: UploadResult = {
+        id: record.id,
+        filename: record.filename,
+        size_bytes: record.size_bytes,
+        summary: record.summary ?? undefined,
+        status: record.status,
+        record_count: itemsData.length,
+        priced_count: priced,
+        estimated_total: total,
+        category_counts: categories,
+        maker_counts: makers,
+        items: itemsData,
+      }
+      updateResult(payload)
+    } catch (error) {
+      console.error(error)
+      alert(error instanceof Error ? error.message : '明細の取得に失敗しました')
+    }
+  }
+
+  useEffect(() => {
+    if (mode === 'history') {
+      fetchHistory()
+    }
+  }, [mode])
 
   const fileSize = useMemo(() => {
     if (!file) {
@@ -267,9 +346,16 @@ function App() {
             >
               テキスト
             </button>
+            <button
+              type="button"
+              className={mode === 'history' ? 'active' : ''}
+              onClick={() => setMode('history')}
+            >
+              履歴一覧
+            </button>
           </div>
 
-          {mode === 'file' ? (
+          {mode === 'file' && (
             <>
               <div className="document-stack" aria-hidden="true">
                 <span />
@@ -299,7 +385,9 @@ function App() {
                 </button>
               </div>
             </>
-          ) : (
+          )}
+
+          {mode === 'text' && (
             <>
               <div className="paste-panel">
                 <textarea
@@ -326,6 +414,47 @@ function App() {
                 </button>
               </div>
             </>
+          )}
+
+          {mode === 'history' && (
+            <div className="history-panel">
+              {isLoadingHistory ? (
+                <p className="history-loading">履歴を読み込み中...</p>
+              ) : historyRecords.length === 0 ? (
+                <p className="history-empty">過去の取り込み履歴はありません</p>
+              ) : (
+                <div className="history-list">
+                  {historyRecords.map((record) => (
+                    <div
+                      key={record.id}
+                      className={`history-item ${result?.id === record.id ? 'active' : ''}`}
+                      onClick={() => selectHistoryRecord(record)}
+                    >
+                      <div className="history-item-header">
+                        <span className="history-item-filename" title={record.filename}>
+                          {record.filename}
+                        </span>
+                        <span className="history-item-date">
+                          {new Date(record.created_at).toLocaleString('ja-JP', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                      <div className="history-item-summary">
+                        {record.summary || 'サマリーなし'}
+                      </div>
+                      <div className="history-item-meta">
+                        <span>サイズ: {formatBytes(record.size_bytes)}</span>
+                        <span>ID: {record.id}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
 

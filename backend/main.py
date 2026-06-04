@@ -443,6 +443,23 @@ def normalize_price(value: str) -> int | None:
     return None
 
 
+@app.get("/upload-records", response_model=None)
+def get_upload_records() -> list[dict[str, any]]:
+    with Session(engine) as session:
+        from sqlmodel import select
+        statement = select(UploadRecord).order_by(UploadRecord.created_at.desc())
+        results = session.exec(statement).all()
+        # レスポンス用に各レコードのdict化
+        records_list = []
+        for r in results:
+            d = r.dict()
+            # 日時をISO形式文字列に変換
+            if d.get("created_at"):
+                d["created_at"] = d["created_at"].isoformat()
+            records_list.append(d)
+        return records_list
+
+
 @app.get("/upload-records/{record_id}/items", response_model=None)
 def get_satei_items(record_id: int) -> list[dict[str, any]]:
     with Session(engine) as session:
