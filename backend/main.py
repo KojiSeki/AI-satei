@@ -295,7 +295,7 @@ def parse_text_to_items(text: str) -> list[dict[str, any]]:
                         header_map["category"] = idx
                     elif any(x in p_clean for x in ["メーカー", "製造元"]) and "maker" not in header_map:
                         header_map["maker"] = idx
-                    elif any(x in p_clean for x in ["推定卸価格", "卸価格", "査定", "価格", "金額"]) and "price" not in header_map:
+                    elif any(x in p_clean for x in ["推定卸価格", "卸価格", "査定", "価格", "金額"]) and "過去" not in p_clean and "price" not in header_map:
                         header_map["price"] = idx
                 break
 
@@ -442,7 +442,7 @@ def parse_dataframe_to_items(df: pd.DataFrame) -> list[dict[str, any]]:
             col_map["maker"] = col
         elif any(x in col_lower for x in cat_cols) and "category" not in col_map:
             col_map["category"] = col
-        elif any(x in col_lower for x in price_cols) and "price" not in col_map:
+        elif any(x in col_lower for x in price_cols) and "過去" not in col_lower and "price" not in col_map:
             col_map["price"] = col
 
     items = []
