@@ -6,8 +6,19 @@ type SateiItem = {
   id: number
   upload_record_id: number
   asset_id: string | null
+  serial: string | null
   maker: string | null
   category: string | null
+  model_name: string | null
+  model_number: string | null
+  device_type: string | null
+  condition: string | null
+  cpu: string | null
+  memory: string | null
+  storage: string | null
+  storage_serial: string | null
+  weight: string | null
+  remarks: string | null
   original_price: number | null
   price: number | null
   raw_text: string | null
@@ -556,7 +567,7 @@ function App() {
           <div className="section-header">
             <h2>査定明細一覧（一台一台の査定・編集）</h2>
             <p className="section-subheader">
-              管理番号、メーカー、カテゴリ、査定額を入力または修正してください。フォーカスアウト（欄外クリック）で自動保存されます。
+              各項目（管理番号、シリアル、スペック、査定額など）を直接入力または修正してください。フォーカスアウト（欄外クリック）で自動保存されます。
             </p>
           </div>
           <div className="table-responsive">
@@ -565,10 +576,21 @@ function App() {
                 <tr>
                   <th>No.</th>
                   <th>管理番号</th>
+                  <th>シリアル</th>
                   <th>メーカー</th>
                   <th>カテゴリ</th>
-                  <th>査定額 (円)</th>
+                  <th>機種</th>
+                  <th>モデル型番</th>
+                  <th>タイプ</th>
+                  <th>CPU</th>
+                  <th>メモリ</th>
+                  <th>ストレージ</th>
+                  <th>ストレージシリアル</th>
+                  <th>重量</th>
+                  <th>状態</th>
+                  <th>備考</th>
                   <th>元価格 (円)</th>
+                  <th>査定額 (円)</th>
                   <th>ステータス</th>
                   <th>元のテキスト (参考)</th>
                 </tr>
@@ -584,7 +606,17 @@ function App() {
                         value={item.asset_id ?? ''}
                         onChange={(e) => handleCellChange(item.id, 'asset_id', e.target.value)}
                         onBlur={() => handleCellBlur(item.id, 'asset_id')}
-                        placeholder="未登録"
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.serial ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'serial', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'serial')}
+                        placeholder="-"
                       />
                     </td>
                     <td>
@@ -594,7 +626,7 @@ function App() {
                         value={item.maker ?? ''}
                         onChange={(e) => handleCellChange(item.id, 'maker', e.target.value)}
                         onBlur={() => handleCellBlur(item.id, 'maker')}
-                        placeholder="未登録"
+                        placeholder="-"
                       />
                     </td>
                     <td>
@@ -604,8 +636,113 @@ function App() {
                         value={item.category ?? ''}
                         onChange={(e) => handleCellChange(item.id, 'category', e.target.value)}
                         onBlur={() => handleCellBlur(item.id, 'category')}
-                        placeholder="未登録"
+                        placeholder="-"
                       />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.model_name ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'model_name', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'model_name')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.model_number ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'model_number', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'model_number')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.device_type ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'device_type', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'device_type')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.cpu ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'cpu', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'cpu')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.memory ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'memory', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'memory')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.storage ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'storage', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'storage')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.storage_serial ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'storage_serial', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'storage_serial')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.weight ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'weight', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'weight')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.condition ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'condition', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'condition')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="table-input"
+                        value={item.remarks ?? ''}
+                        onChange={(e) => handleCellChange(item.id, 'remarks', e.target.value)}
+                        onBlur={() => handleCellBlur(item.id, 'remarks')}
+                        placeholder="-"
+                      />
+                    </td>
+                    <td>
+                      <span className="original-price">
+                        {item.original_price !== null ? formatYen(item.original_price) : '-'}
+                      </span>
                     </td>
                     <td>
                       <input
@@ -622,11 +759,6 @@ function App() {
                         onBlur={() => handleCellBlur(item.id, 'price')}
                         placeholder="0"
                       />
-                    </td>
-                    <td>
-                      <span className="original-price">
-                        {item.original_price !== null ? formatYen(item.original_price) : '-'}
-                      </span>
                     </td>
                     <td>
                       <select

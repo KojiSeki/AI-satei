@@ -341,14 +341,15 @@ button:focus-visible {
 
 .satei-table {
   border-collapse: collapse;
-  font-size: 14px;
+  font-size: 13px;
+  min-width: 1800px;
   width: 100%;
 }
 
 .satei-table th,
 .satei-table td {
   border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: left;
   vertical-align: middle;
 }
@@ -371,8 +372,8 @@ button:focus-visible {
   box-sizing: border-box;
   color: var(--text);
   font-family: inherit;
-  font-size: 14px;
-  padding: 6px 8px;
+  font-size: 13px;
+  padding: 4px 6px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
   width: 100%;
 }
