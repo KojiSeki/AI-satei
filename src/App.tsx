@@ -261,8 +261,37 @@ function App() {
     }
   }
 
+const DEFAULT_SPEC_KEYS = [
+  '企業',
+  '順番',
+  '種類',
+  '品名',
+  'CPU',
+  'メモリ',
+  'HDD',
+  '詳細',
+  '容量',
+  'HDDシリアル',
+  '結果',
+  '方式',
+  'バッテリー',
+  'グレード',
+  '状態',
+  '起動',
+  '画面',
+  'キーボード',
+  'AC',
+  '傷',
+  '映像',
+  'ドライブ',
+  'テンキー',
+  'カメラ',
+  'Wifi',
+  '過去査定金額'
+]
+
   const specKeys = useMemo(() => {
-    const keysSet = new Set<string>()
+    const keysSet = new Set<string>(DEFAULT_SPEC_KEYS)
     items.forEach((item) => {
       if (item.specs) {
         Object.keys(item.specs).forEach((key) => {
