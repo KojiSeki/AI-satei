@@ -6,23 +6,13 @@ type SateiItem = {
   id: number
   upload_record_id: number
   asset_id: string | null
-  serial: string | null
   maker: string | null
   category: string | null
-  model_name: string | null
-  model_number: string | null
-  device_type: string | null
-  condition: string | null
-  cpu: string | null
-  memory: string | null
-  storage: string | null
-  storage_serial: string | null
-  weight: string | null
-  remarks: string | null
   original_price: number | null
   price: number | null
   raw_text: string | null
   status: string
+  specs?: Record<string, string>
 }
 
 type UploadResult = {
@@ -271,10 +261,73 @@ function App() {
     }
   }
 
+  const specKeys = useMemo(() => {
+    const keysSet = new Set<string>()
+    items.forEach((item) => {
+      if (item.specs) {
+        Object.keys(item.specs).forEach((key) => {
+          if (key && key.trim()) {
+            keysSet.add(key)
+          }
+        })
+      }
+    })
+    return Array.from(keysSet)
+  }, [items])
+
   const handleCellChange = (itemId: number, field: keyof SateiItem, value: any) => {
     setItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, [field]: value } : item))
     )
+  }
+
+  const handleSpecCellChange = (itemId: number, specKey: string, value: string) => {
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === itemId
+          ? { ...item, specs: { ...(item.specs ?? {}), [specKey]: value } }
+          : item
+      )
+    )
+  }
+
+  const handleSpecCellBlur = async (itemId: number, specKey: string) => {
+    const item = items.find((it) => it.id === itemId)
+    if (!item) return
+
+    try {
+      const response = await fetch(`/satei-items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          specs: { [specKey]: item.specs?.[specKey] ?? '' }
+        }),
+      })
+      if (!response.ok) {
+        throw new Error('更新に失敗しました')
+      }
+      const updatedItem = await response.json()
+
+      const updatedItems = items.map((it) => (it.id === itemId ? { ...it, ...updatedItem } : it))
+      const total = updatedItems.reduce((acc, cur) => acc + (cur.price ?? 0), 0)
+      const priced = updatedItems.filter((it) => it.price !== null && it.price !== undefined).length
+
+      if (result) {
+        setResult({
+          ...result,
+          estimated_total: total,
+          priced_count: priced,
+          items: updatedItems,
+        })
+      }
+    } catch (error) {
+      console.error(error)
+      if (result?.items) {
+        setItems(result.items)
+      }
+    }
   }
 
   const handleCellBlur = async (itemId: number, field: keyof SateiItem) => {
@@ -567,7 +620,7 @@ function App() {
           <div className="section-header">
             <h2>査定明細一覧（一台一台の査定・編集）</h2>
             <p className="section-subheader">
-              各項目（管理番号、シリアル、スペック、査定額など）を直接入力または修正してください。フォーカスアウト（欄外クリック）で自動保存されます。
+              各項目（管理番号、スペック、査定額など）を直接入力または修正してください。フォーカスアウト（欄外クリック）で自動保存されます。
             </p>
           </div>
           <div className="table-responsive">
@@ -576,19 +629,11 @@ function App() {
                 <tr>
                   <th>No.</th>
                   <th>管理番号</th>
-                  <th>シリアル</th>
                   <th>メーカー</th>
                   <th>カテゴリ</th>
-                  <th>機種</th>
-                  <th>モデル型番</th>
-                  <th>タイプ</th>
-                  <th>CPU</th>
-                  <th>メモリ</th>
-                  <th>ストレージ</th>
-                  <th>ストレージシリアル</th>
-                  <th>重量</th>
-                  <th>状態</th>
-                  <th>備考</th>
+                  {specKeys.map((key) => (
+                    <th key={key}>{key}</th>
+                  ))}
                   <th>元価格 (円)</th>
                   <th>査定額 (円)</th>
                   <th>ステータス</th>
@@ -613,16 +658,6 @@ function App() {
                       <input
                         type="text"
                         className="table-input"
-                        value={item.serial ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'serial', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'serial')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
                         value={item.maker ?? ''}
                         onChange={(e) => handleCellChange(item.id, 'maker', e.target.value)}
                         onBlur={() => handleCellBlur(item.id, 'maker')}
@@ -639,106 +674,18 @@ function App() {
                         placeholder="-"
                       />
                     </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.model_name ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'model_name', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'model_name')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.model_number ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'model_number', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'model_number')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.device_type ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'device_type', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'device_type')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.cpu ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'cpu', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'cpu')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.memory ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'memory', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'memory')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.storage ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'storage', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'storage')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.storage_serial ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'storage_serial', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'storage_serial')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.weight ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'weight', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'weight')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.condition ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'condition', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'condition')}
-                        placeholder="-"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="table-input"
-                        value={item.remarks ?? ''}
-                        onChange={(e) => handleCellChange(item.id, 'remarks', e.target.value)}
-                        onBlur={() => handleCellBlur(item.id, 'remarks')}
-                        placeholder="-"
-                      />
-                    </td>
+                    {specKeys.map((key) => (
+                      <td key={key}>
+                        <input
+                          type="text"
+                          className="table-input"
+                          value={item.specs?.[key] ?? ''}
+                          onChange={(e) => handleSpecCellChange(item.id, key, e.target.value)}
+                          onBlur={() => handleSpecCellBlur(item.id, key)}
+                          placeholder="-"
+                        />
+                      </td>
+                    ))}
                     <td>
                       <span className="original-price">
                         {item.original_price !== null ? formatYen(item.original_price) : '-'}
